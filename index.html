@@ -14,14 +14,27 @@
     <p>Inseam: <input id="inseam" type="number"></p>
 
     <button onclick="showResult()">See my fit</button>
+    <h2>Basic T-Shirt, size M</h2>
     <p id="result"></p>
 
     <script>
+      // The garment's measurements (in inches)
+      var shirt = { chest: 42, waist: 40 };
+
+      // Turns the extra room into a word
+      function fitWord(garment, body) {
+        var room = garment - body;
+        if (room < 1) return "Tight";
+        if (room <= 4) return "Snug";
+        return "Loose";
+      }
+
       function showResult() {
-        var chest = document.getElementById("chest").value;
-        var waist = document.getElementById("waist").value;
+        var chest = Number(document.getElementById("chest").value);
+        var waist = Number(document.getElementById("waist").value);
         document.getElementById("result").innerText =
-          "You entered chest " + chest + " and waist " + waist + ".";
+          "Chest: " + fitWord(shirt.chest, chest) +
+          " | Waist: " + fitWord(shirt.waist, waist);
       }
     </script>
   </body>
