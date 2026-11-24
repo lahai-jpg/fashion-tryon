@@ -5,6 +5,24 @@
   </head>
   <body>
     <h1>Fashion Try-On</h1>
-    <p>Coming soon.</p>
+    <p>Enter your measurements in inches.</p>
+
+    <p>Height: <input id="height" type="number"></p>
+    <p>Chest: <input id="chest" type="number"></p>
+    <p>Waist: <input id="waist" type="number"></p>
+    <p>Hips: <input id="hips" type="number"></p>
+    <p>Inseam: <input id="inseam" type="number"></p>
+
+    <button onclick="showResult()">See my fit</button>
+    <p id="result"></p>
+
+    <script>
+      function showResult() {
+        var chest = document.getElementById("chest").value;
+        var waist = document.getElementById("waist").value;
+        document.getElementById("result").innerText =
+          "You entered chest " + chest + " and waist " + waist + ".";
+      }
+    </script>
   </body>
 </html>
