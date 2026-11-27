@@ -13,8 +13,15 @@
     <p>Hips: <input id="hips" type="number"></p>
     <p>Inseam: <input id="inseam" type="number"></p>
 
+    <p>Garment:
+      <select id="garment">
+        <option value="tshirt">Basic T-Shirt, size M</option>
+        <option value="jeans">Slim Jeans, size M</option>
+        <option value="jacket">Fitted Jacket, size M</option>
+      </select>
+    </p>
+
     <button onclick="showResult()">See my fit</button>
-    <h2>Basic T-Shirt, size M</h2>
     <p id="result"></p>
 
     <svg width="200" height="380" viewBox="0 0 200 380">
@@ -22,14 +29,20 @@
       <rect x="35" y="80" width="22" height="110" rx="10" fill="#ddd"/>
       <rect x="143" y="80" width="22" height="110" rx="10" fill="#ddd"/>
       <rect id="chestZone" x="60" y="75" width="80" height="60" rx="10" fill="#ddd"/>
-      <rect id="waistZone" x="65" y="135" width="70" height="55" rx="10" fill="#ddd"/>
-      <rect x="68" y="190" width="30" height="180" rx="10" fill="#ddd"/>
-      <rect x="102" y="190" width="30" height="180" rx="10" fill="#ddd"/>
+      <rect id="waistZone" x="65" y="135" width="70" height="40" rx="10" fill="#ddd"/>
+      <rect id="hipsZone" x="62" y="175" width="76" height="50" rx="10" fill="#ddd"/>
+      <rect x="68" y="225" width="30" height="145" rx="10" fill="#ddd"/>
+      <rect x="102" y="225" width="30" height="145" rx="10" fill="#ddd"/>
     </svg>
 
     <script>
-      // The garment's measurements (in inches)
-      var shirt = { chest: 42, waist: 40 };
+      // The garments' measurements (in inches)
+      // A body part that isn't listed means the garment doesn't cover it
+      var garments = {
+        tshirt: { chest: 42, waist: 40 },
+        jeans:  { waist: 34, hips: 41 },
+        jacket: { chest: 40, waist: 36, hips: 40 }
+      };
 
       // Turns the extra room into a word
       function fitWord(garment, body) {
@@ -40,19 +53,27 @@
       }
 
       // Each word gets a color
-      var colors = { Tight: "#e74c3c", Snug: "#2ecc71", Loose: "#3498db" };
+      var colors = {
+        Tight: "#e74c3c",
+        Snug: "#2ecc71",
+        Loose: "#3498db",
+        "Not covered": "#ddd"
+      };
 
       function showResult() {
-        var chest = Number(document.getElementById("chest").value);
-        var waist = Number(document.getElementById("waist").value);
-        var chestFit = fitWord(shirt.chest, chest);
-        var waistFit = fitWord(shirt.waist, waist);
+        var g = garments[document.getElementById("garment").value];
+        var zones = ["chest", "waist", "hips"];
+        var text = [];
 
-        document.getElementById("result").innerText =
-          "Chest: " + chestFit + " | Waist: " + waistFit;
+        for (var i = 0; i < zones.length; i++) {
+          var z = zones[i];
+          var body = Number(document.getElementById(z).value);
+          var word = (g[z] === undefined) ? "Not covered" : fitWord(g[z], body);
+          text.push(z + ": " + word);
+          document.getElementById(z + "Zone").setAttribute("fill", colors[word]);
+        }
 
-        document.getElementById("chestZone").setAttribute("fill", colors[chestFit]);
-        document.getElementById("waistZone").setAttribute("fill", colors[waistFit]);
+        document.getElementById("result").innerText = text.join(" | ");
       }
     </script>
   </body>
