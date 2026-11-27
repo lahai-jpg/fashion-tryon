@@ -21,7 +21,7 @@
         <p>Chest: <input id="chest" type="number" placeholder="40"></p>
         <p>Waist: <input id="waist" type="number" placeholder="34"></p>
         <p>Hips: <input id="hips" type="number" placeholder="40"></p>
-        <p>Inseam: <input id="inseam" type="number"></p>
+        <p>Inseam: <input id="inseam" type="number" placeholder="30"></p>
 
         <p>Garment:
           <select id="garment">
@@ -91,13 +91,15 @@
         waist: addPart(new THREE.CylinderGeometry(0.4, 0.42, 0.4, 32), 0, 0.9, mats.waist),
         hips: addPart(new THREE.CylinderGeometry(0.42, 0.45, 0.45, 32), 0, 0.5, mats.hips)
       };
-      addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), -0.2, -0.35, plain);
-      addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), 0.2, -0.35, plain);
+      const legs = [
+        addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), -0.2, -0.35, plain),
+        addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), 0.2, -0.35, plain)
+      ];
       addPart(new THREE.CylinderGeometry(0.09, 0.08, 1.0, 32), -0.62, 1.35, plain);
       addPart(new THREE.CylinderGeometry(0.09, 0.08, 1.0, 32), 0.62, 1.35, plain);
 
       // Average numbers the mannequin started with
-      const defaults = { height: 68, chest: 40, waist: 34, hips: 40 };
+      const defaults = { height: 68, chest: 40, waist: 34, hips: 40, inseam: 30 };
 
       // Read a box. If it's empty, use the average.
       function readBox(id) {
@@ -111,13 +113,22 @@
         const c = readBox("chest");
         const w = readBox("waist");
         const p = readBox("hips");
+        const i = readBox("inseam");
+
         body.scale.y = h / defaults.height;
         parts.chest.scale.set(c / defaults.chest, 1, c / defaults.chest);
         parts.waist.scale.set(w / defaults.waist, 1, w / defaults.waist);
         parts.hips.scale.set(p / defaults.hips, 1, p / defaults.hips);
+
+        // Longer inseam = longer legs. The top of the legs stays at the hips.
+        const legStretch = i / defaults.inseam;
+        for (const leg of legs) {
+          leg.scale.y = legStretch;
+          leg.position.y = 0.3 - 0.65 * legStretch;
+        }
       }
 
-      for (const id of ["height", "chest", "waist", "hips"]) {
+      for (const id of ["height", "chest", "waist", "hips", "inseam"]) {
         document.getElementById(id).addEventListener("input", updateMannequin);
       }
       updateMannequin();
