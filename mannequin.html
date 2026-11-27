@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Mannequin</title>
+    <style>
+      body { margin: 0; }
+      canvas { display: block; }
+    </style>
+    <script type="importmap">
+      { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+    </script>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from "three";
+
+      // The scene, camera, and screen
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xf2f2f2);
+      const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 100);
+      camera.position.set(0, 0.7, 6);
+      camera.lookAt(0, 0.7, 0);
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(innerWidth, innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Lights
+      scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+      const light = new THREE.DirectionalLight(0xffffff, 0.8);
+      light.position.set(3, 5, 4);
+      scene.add(light);
+
+      // The mannequin is a group of simple shapes
+      const material = new THREE.MeshStandardMaterial({ color: 0xbbbbbb });
+      const body = new THREE.Group();
+      scene.add(body);
+
+      function addPart(shape, x, y) {
+        const mesh = new THREE.Mesh(shape, material);
+        mesh.position.set(x, y, 0);
+        body.add(mesh);
+      }
+
+      addPart(new THREE.SphereGeometry(0.25, 32, 32), 0, 2.1);           // head
+      addPart(new THREE.CylinderGeometry(0.45, 0.4, 0.7, 32), 0, 1.45);  // chest
+      addPart(new THREE.CylinderGeometry(0.4, 0.42, 0.4, 32), 0, 0.9);   // waist
+      addPart(new THREE.CylinderGeometry(0.42, 0.45, 0.45, 32), 0, 0.5); // hips
+      addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), -0.2, -0.35); // left leg
+      addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), 0.2, -0.35);  // right leg
+      addPart(new THREE.CylinderGeometry(0.09, 0.08, 1.0, 32), -0.62, 1.35); // left arm
+      addPart(new THREE.CylinderGeometry(0.09, 0.08, 1.0, 32), 0.62, 1.35);  // right arm
+
+      // Slowly spin the mannequin
+      function animate() {
+        requestAnimationFrame(animate);
+        body.rotation.y += 0.01;
+        renderer.render(scene, camera);
+      }
+      animate();
+    </script>
+  </body>
+</html>
