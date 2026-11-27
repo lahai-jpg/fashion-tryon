@@ -1,99 +1,95 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Mannequin</title>
+    <title>Fashion Try-On</title>
     <style>
-      body { margin: 0; }
-      canvas { display: block; }
-      #panel {
-        position: absolute; top: 10px; left: 10px;
-        background: white; padding: 10px; border-radius: 8px;
-        font-family: sans-serif; font-size: 14px; line-height: 2;
-      }
+      body { font-family: sans-serif; margin: 20px; }
+      #wrap { display: flex; gap: 30px; flex-wrap: wrap; }
+      #viewer { width: 300px; height: 420px; }
     </style>
     <script type="importmap">
       { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
     </script>
   </head>
   <body>
-    <div id="panel">
-      Height <input id="height" type="range" min="60" max="76" value="68"> <span id="heightVal"></span> in<br>
-      Chest <input id="chest" type="range" min="30" max="50" value="40"> <span id="chestVal"></span> in<br>
-      Waist <input id="waist" type="range" min="24" max="46" value="34"> <span id="waistVal"></span> in<br>
-      Hips <input id="hips" type="range" min="30" max="52" value="40"> <span id="hipsVal"></span> in
+    <h1>Fashion Try-On</h1>
+
+    <div id="wrap">
+      <div>
+        <p>Enter your measurements in inches.</p>
+        <p>Height: <input id="height" type="number" placeholder="68"></p>
+        <p>Chest: <input id="chest" type="number" placeholder="40"></p>
+        <p>Waist: <input id="waist" type="number" placeholder="34"></p>
+        <p>Hips: <input id="hips" type="number" placeholder="40"></p>
+        <p>Inseam: <input id="inseam" type="number"></p>
+
+        <p>Garment:
+          <select id="garment">
+            <option value="tshirt">Basic T-Shirt, size M</option>
+            <option value="jeans">Slim Jeans, size M</option>
+            <option value="jacket">Fitted Jacket, size M</option>
+          </select>
+        </p>
+
+        <button id="fitButton">See my fit</button>
+        <p id="result"></p>
+      </div>
+
+      <svg width="200" height="380" viewBox="0 0 200 380">
+        <circle cx="100" cy="35" r="25" fill="#ddd"/>
+        <rect x="35" y="80" width="22" height="110" rx="10" fill="#ddd"/>
+        <rect x="143" y="80" width="22" height="110" rx="10" fill="#ddd"/>
+        <rect id="chestZone" x="60" y="75" width="80" height="60" rx="10" fill="#ddd"/>
+        <rect id="waistZone" x="65" y="135" width="70" height="40" rx="10" fill="#ddd"/>
+        <rect id="hipsZone" x="62" y="175" width="76" height="50" rx="10" fill="#ddd"/>
+        <rect x="68" y="225" width="30" height="145" rx="10" fill="#ddd"/>
+        <rect x="102" y="225" width="30" height="145" rx="10" fill="#ddd"/>
+      </svg>
+
+      <div id="viewer"></div>
     </div>
 
     <script type="module">
       import * as THREE from "three";
 
-      // The scene, camera, and screen
+      // ---------- The 3D mannequin ----------
+      const viewer = document.getElementById("viewer");
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0xf2f2f2);
-      const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 100);
+      const camera = new THREE.PerspectiveCamera(45, 300 / 420, 0.1, 100);
       camera.position.set(0, 0.7, 6);
       camera.lookAt(0, 0.7, 0);
       const renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(innerWidth, innerHeight);
-      document.body.appendChild(renderer.domElement);
+      renderer.setSize(300, 420);
+      viewer.appendChild(renderer.domElement);
 
-      // Lights
       scene.add(new THREE.AmbientLight(0xffffff, 0.7));
       const light = new THREE.DirectionalLight(0xffffff, 0.8);
       light.position.set(3, 5, 4);
       scene.add(light);
 
-      // The mannequin is a group of simple shapes
-      const material = new THREE.MeshStandardMaterial({ color: 0xbbbbbb });
       const body = new THREE.Group();
       scene.add(body);
 
-      function addPart(shape, x, y) {
+      function makeMaterial() {
+        return new THREE.MeshStandardMaterial({ color: 0xbbbbbb });
+      }
+      // Chest, waist, and hips get their own material so we can color them
+      const mats = { chest: makeMaterial(), waist: makeMaterial(), hips: makeMaterial() };
+      const plain = makeMaterial();
+
+      function addPart(shape, x, y, material) {
         const mesh = new THREE.Mesh(shape, material);
         mesh.position.set(x, y, 0);
         body.add(mesh);
         return mesh;
       }
 
-      addPart(new THREE.SphereGeometry(0.25, 32, 32), 0, 2.1);                // head
-      const chestPart = addPart(new THREE.CylinderGeometry(0.45, 0.4, 0.7, 32), 0, 1.45);
-      const waistPart = addPart(new THREE.CylinderGeometry(0.4, 0.42, 0.4, 32), 0, 0.9);
-      const hipsPart = addPart(new THREE.CylinderGeometry(0.42, 0.45, 0.45, 32), 0, 0.5);
-      addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), -0.2, -0.35);  // left leg
-      addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), 0.2, -0.35);   // right leg
-      addPart(new THREE.CylinderGeometry(0.09, 0.08, 1.0, 32), -0.62, 1.35);  // left arm
-      addPart(new THREE.CylinderGeometry(0.09, 0.08, 1.0, 32), 0.62, 1.35);   // right arm
-
-      // Read the sliders and reshape the mannequin
-      // The "average" numbers (68, 40, 34, 40) are the shape we started with
-      function update() {
-        const h = Number(document.getElementById("height").value);
-        const c = Number(document.getElementById("chest").value);
-        const w = Number(document.getElementById("waist").value);
-        const p = Number(document.getElementById("hips").value);
-
-        document.getElementById("heightVal").innerText = h;
-        document.getElementById("chestVal").innerText = c;
-        document.getElementById("waistVal").innerText = w;
-        document.getElementById("hipsVal").innerText = p;
-
-        body.scale.y = h / 68;
-        chestPart.scale.set(c / 40, 1, c / 40);
-        waistPart.scale.set(w / 34, 1, w / 34);
-        hipsPart.scale.set(p / 40, 1, p / 40);
-      }
-
-      for (const id of ["height", "chest", "waist", "hips"]) {
-        document.getElementById(id).addEventListener("input", update);
-      }
-      update();
-
-      // Slowly spin the mannequin
-      function animate() {
-        requestAnimationFrame(animate);
-        body.rotation.y += 0.01;
-        renderer.render(scene, camera);
-      }
-      animate();
-    </script>
-  </body>
-</html>
+      addPart(new THREE.SphereGeometry(0.25, 32, 32), 0, 2.1, plain);
+      const parts = {
+        chest: addPart(new THREE.CylinderGeometry(0.45, 0.4, 0.7, 32), 0, 1.45, mats.chest),
+        waist: addPart(new THREE.CylinderGeometry(0.4, 0.42, 0.4, 32), 0, 0.9, mats.waist),
+        hips: addPart(new THREE.CylinderGeometry(0.42, 0.45, 0.45, 32), 0, 0.5, mats.hips)
+      };
+      addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), -0.2, -0.35, plain);
+      addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3,
