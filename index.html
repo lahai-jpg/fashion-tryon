@@ -2,79 +2,172 @@
 <html>
   <head>
     <title>Fashion Try-On</title>
+    <style>
+      body { font-family: sans-serif; margin: 20px; }
+      #wrap { display: flex; gap: 30px; flex-wrap: wrap; }
+      #viewer { width: 300px; height: 420px; }
+    </style>
+    <script type="importmap">
+      { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+    </script>
   </head>
   <body>
     <h1>Fashion Try-On</h1>
-    <p>Enter your measurements in inches.</p>
 
-    <p>Height: <input id="height" type="number"></p>
-    <p>Chest: <input id="chest" type="number"></p>
-    <p>Waist: <input id="waist" type="number"></p>
-    <p>Hips: <input id="hips" type="number"></p>
-    <p>Inseam: <input id="inseam" type="number"></p>
+    <div id="wrap">
+      <div>
+        <p>Enter your measurements in inches.</p>
+        <p>Height: <input id="height" type="number" placeholder="68"></p>
+        <p>Chest: <input id="chest" type="number" placeholder="40"></p>
+        <p>Waist: <input id="waist" type="number" placeholder="34"></p>
+        <p>Hips: <input id="hips" type="number" placeholder="40"></p>
+        <p>Inseam: <input id="inseam" type="number"></p>
 
-    <p>Garment:
-      <select id="garment">
-        <option value="tshirt">Basic T-Shirt, size M</option>
-        <option value="jeans">Slim Jeans, size M</option>
-        <option value="jacket">Fitted Jacket, size M</option>
-      </select>
-    </p>
+        <p>Garment:
+          <select id="garment">
+            <option value="tshirt">Basic T-Shirt, size M</option>
+            <option value="jeans">Slim Jeans, size M</option>
+            <option value="jacket">Fitted Jacket, size M</option>
+          </select>
+        </p>
 
-    <button onclick="showResult()">See my fit</button>
-    <p id="result"></p>
+        <button id="fitButton">See my fit</button>
+        <p id="result"></p>
+      </div>
 
-    <svg width="200" height="380" viewBox="0 0 200 380">
-      <circle cx="100" cy="35" r="25" fill="#ddd"/>
-      <rect x="35" y="80" width="22" height="110" rx="10" fill="#ddd"/>
-      <rect x="143" y="80" width="22" height="110" rx="10" fill="#ddd"/>
-      <rect id="chestZone" x="60" y="75" width="80" height="60" rx="10" fill="#ddd"/>
-      <rect id="waistZone" x="65" y="135" width="70" height="40" rx="10" fill="#ddd"/>
-      <rect id="hipsZone" x="62" y="175" width="76" height="50" rx="10" fill="#ddd"/>
-      <rect x="68" y="225" width="30" height="145" rx="10" fill="#ddd"/>
-      <rect x="102" y="225" width="30" height="145" rx="10" fill="#ddd"/>
-    </svg>
+      <svg width="200" height="380" viewBox="0 0 200 380">
+        <circle cx="100" cy="35" r="25" fill="#ddd"/>
+        <rect x="35" y="80" width="22" height="110" rx="10" fill="#ddd"/>
+        <rect x="143" y="80" width="22" height="110" rx="10" fill="#ddd"/>
+        <rect id="chestZone" x="60" y="75" width="80" height="60" rx="10" fill="#ddd"/>
+        <rect id="waistZone" x="65" y="135" width="70" height="40" rx="10" fill="#ddd"/>
+        <rect id="hipsZone" x="62" y="175" width="76" height="50" rx="10" fill="#ddd"/>
+        <rect x="68" y="225" width="30" height="145" rx="10" fill="#ddd"/>
+        <rect x="102" y="225" width="30" height="145" rx="10" fill="#ddd"/>
+      </svg>
 
-    <script>
-      // The garments' measurements (in inches)
+      <div id="viewer"></div>
+    </div>
+
+    <script type="module">
+      import * as THREE from "three";
+
+      // ---------- The 3D mannequin ----------
+      const viewer = document.getElementById("viewer");
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xf2f2f2);
+      const camera = new THREE.PerspectiveCamera(45, 300 / 420, 0.1, 100);
+      camera.position.set(0, 0.7, 6);
+      camera.lookAt(0, 0.7, 0);
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(300, 420);
+      viewer.appendChild(renderer.domElement);
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+      const light = new THREE.DirectionalLight(0xffffff, 0.8);
+      light.position.set(3, 5, 4);
+      scene.add(light);
+
+      const body = new THREE.Group();
+      scene.add(body);
+
+      function makeMaterial() {
+        return new THREE.MeshStandardMaterial({ color: 0xbbbbbb });
+      }
+      // Chest, waist, and hips get their own material so we can color them
+      const mats = { chest: makeMaterial(), waist: makeMaterial(), hips: makeMaterial() };
+      const plain = makeMaterial();
+
+      function addPart(shape, x, y, material) {
+        const mesh = new THREE.Mesh(shape, material);
+        mesh.position.set(x, y, 0);
+        body.add(mesh);
+        return mesh;
+      }
+
+      addPart(new THREE.SphereGeometry(0.25, 32, 32), 0, 2.1, plain);
+      const parts = {
+        chest: addPart(new THREE.CylinderGeometry(0.45, 0.4, 0.7, 32), 0, 1.45, mats.chest),
+        waist: addPart(new THREE.CylinderGeometry(0.4, 0.42, 0.4, 32), 0, 0.9, mats.waist),
+        hips: addPart(new THREE.CylinderGeometry(0.42, 0.45, 0.45, 32), 0, 0.5, mats.hips)
+      };
+      addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), -0.2, -0.35, plain);
+      addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), 0.2, -0.35, plain);
+      addPart(new THREE.CylinderGeometry(0.09, 0.08, 1.0, 32), -0.62, 1.35, plain);
+      addPart(new THREE.CylinderGeometry(0.09, 0.08, 1.0, 32), 0.62, 1.35, plain);
+
+      // Average numbers the mannequin started with
+      const defaults = { height: 68, chest: 40, waist: 34, hips: 40 };
+
+      // Read a box. If it's empty, use the average.
+      function readBox(id) {
+        const v = Number(document.getElementById(id).value);
+        return v > 0 ? v : defaults[id];
+      }
+
+      // Reshape the mannequin from the form
+      function updateMannequin() {
+        const h = readBox("height");
+        const c = readBox("chest");
+        const w = readBox("waist");
+        const p = readBox("hips");
+        body.scale.y = h / defaults.height;
+        parts.chest.scale.set(c / defaults.chest, 1, c / defaults.chest);
+        parts.waist.scale.set(w / defaults.waist, 1, w / defaults.waist);
+        parts.hips.scale.set(p / defaults.hips, 1, p / defaults.hips);
+      }
+
+      for (const id of ["height", "chest", "waist", "hips"]) {
+        document.getElementById(id).addEventListener("input", updateMannequin);
+      }
+      updateMannequin();
+
+      function animate() {
+        requestAnimationFrame(animate);
+        body.rotation.y += 0.01;
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      // ---------- The fit check ----------
       // A body part that isn't listed means the garment doesn't cover it
-      var garments = {
+      const garments = {
         tshirt: { chest: 42, waist: 40 },
         jeans:  { waist: 34, hips: 41 },
         jacket: { chest: 40, waist: 36, hips: 40 }
       };
 
-      // Turns the extra room into a word
       function fitWord(garment, body) {
-        var room = garment - body;
+        const room = garment - body;
         if (room < 1) return "Tight";
         if (room <= 4) return "Snug";
         return "Loose";
       }
 
-      // Each word gets a color
-      var colors = {
+      const colors = {
         Tight: "#e74c3c",
         Snug: "#2ecc71",
         Loose: "#3498db",
-        "Not covered": "#ddd"
+        "Not covered": "#bbbbbb"
       };
 
       function showResult() {
-        var g = garments[document.getElementById("garment").value];
-        var zones = ["chest", "waist", "hips"];
-        var text = [];
+        const g = garments[document.getElementById("garment").value];
+        const zones = ["chest", "waist", "hips"];
+        const text = [];
 
-        for (var i = 0; i < zones.length; i++) {
-          var z = zones[i];
-          var body = Number(document.getElementById(z).value);
-          var word = (g[z] === undefined) ? "Not covered" : fitWord(g[z], body);
+        for (const z of zones) {
+          const bodyNumber = Number(document.getElementById(z).value);
+          const word = (g[z] === undefined) ? "Not covered" : fitWord(g[z], bodyNumber);
           text.push(z + ": " + word);
           document.getElementById(z + "Zone").setAttribute("fill", colors[word]);
+          mats[z].color.set(colors[word]);
         }
 
         document.getElementById("result").innerText = text.join(" | ");
       }
+
+      document.getElementById("fitButton").addEventListener("click", showResult);
     </script>
   </body>
 </html>
