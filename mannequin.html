@@ -5,12 +5,24 @@
     <style>
       body { margin: 0; }
       canvas { display: block; }
+      #panel {
+        position: absolute; top: 10px; left: 10px;
+        background: white; padding: 10px; border-radius: 8px;
+        font-family: sans-serif; font-size: 14px; line-height: 2;
+      }
     </style>
     <script type="importmap">
       { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
     </script>
   </head>
   <body>
+    <div id="panel">
+      Height <input id="height" type="range" min="60" max="76" value="68"> <span id="heightVal"></span> in<br>
+      Chest <input id="chest" type="range" min="30" max="50" value="40"> <span id="chestVal"></span> in<br>
+      Waist <input id="waist" type="range" min="24" max="46" value="34"> <span id="waistVal"></span> in<br>
+      Hips <input id="hips" type="range" min="30" max="52" value="40"> <span id="hipsVal"></span> in
+    </div>
+
     <script type="module">
       import * as THREE from "three";
 
@@ -39,16 +51,41 @@
         const mesh = new THREE.Mesh(shape, material);
         mesh.position.set(x, y, 0);
         body.add(mesh);
+        return mesh;
       }
 
-      addPart(new THREE.SphereGeometry(0.25, 32, 32), 0, 2.1);           // head
-      addPart(new THREE.CylinderGeometry(0.45, 0.4, 0.7, 32), 0, 1.45);  // chest
-      addPart(new THREE.CylinderGeometry(0.4, 0.42, 0.4, 32), 0, 0.9);   // waist
-      addPart(new THREE.CylinderGeometry(0.42, 0.45, 0.45, 32), 0, 0.5); // hips
-      addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), -0.2, -0.35); // left leg
-      addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), 0.2, -0.35);  // right leg
-      addPart(new THREE.CylinderGeometry(0.09, 0.08, 1.0, 32), -0.62, 1.35); // left arm
-      addPart(new THREE.CylinderGeometry(0.09, 0.08, 1.0, 32), 0.62, 1.35);  // right arm
+      addPart(new THREE.SphereGeometry(0.25, 32, 32), 0, 2.1);                // head
+      const chestPart = addPart(new THREE.CylinderGeometry(0.45, 0.4, 0.7, 32), 0, 1.45);
+      const waistPart = addPart(new THREE.CylinderGeometry(0.4, 0.42, 0.4, 32), 0, 0.9);
+      const hipsPart = addPart(new THREE.CylinderGeometry(0.42, 0.45, 0.45, 32), 0, 0.5);
+      addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), -0.2, -0.35);  // left leg
+      addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), 0.2, -0.35);   // right leg
+      addPart(new THREE.CylinderGeometry(0.09, 0.08, 1.0, 32), -0.62, 1.35);  // left arm
+      addPart(new THREE.CylinderGeometry(0.09, 0.08, 1.0, 32), 0.62, 1.35);   // right arm
+
+      // Read the sliders and reshape the mannequin
+      // The "average" numbers (68, 40, 34, 40) are the shape we started with
+      function update() {
+        const h = Number(document.getElementById("height").value);
+        const c = Number(document.getElementById("chest").value);
+        const w = Number(document.getElementById("waist").value);
+        const p = Number(document.getElementById("hips").value);
+
+        document.getElementById("heightVal").innerText = h;
+        document.getElementById("chestVal").innerText = c;
+        document.getElementById("waistVal").innerText = w;
+        document.getElementById("hipsVal").innerText = p;
+
+        body.scale.y = h / 68;
+        chestPart.scale.set(c / 40, 1, c / 40);
+        waistPart.scale.set(w / 34, 1, w / 34);
+        hipsPart.scale.set(p / 40, 1, p / 40);
+      }
+
+      for (const id of ["height", "chest", "waist", "hips"]) {
+        document.getElementById(id).addEventListener("input", update);
+      }
+      update();
 
       // Slowly spin the mannequin
       function animate() {
