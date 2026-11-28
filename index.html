@@ -184,6 +184,16 @@
 
         document.getElementById("result").innerText = text.join(" | ");
       }
+        // Size each garment shell from the garment's measurements
+        for (const z of zones) {
+          if (g[z] === undefined) {
+            shells[z].visible = false;
+          } else {
+            shells[z].visible = true;
+            const s = g[z] / defaults[z];
+            shells[z].scale.set(s, 1, s);
+          }
+        }
 
       document.getElementById("fitButton").addEventListener("click", showResult);
     </script>
