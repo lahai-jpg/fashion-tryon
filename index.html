@@ -90,7 +90,9 @@
         chest: addPart(new THREE.CylinderGeometry(0.45, 0.4, 0.7, 32), 0, 1.45, mats.chest),
         waist: addPart(new THREE.CylinderGeometry(0.4, 0.42, 0.4, 32), 0, 0.9, mats.waist),
         hips: addPart(new THREE.CylinderGeometry(0.42, 0.45, 0.45, 32), 0, 0.5, mats.hips)
-      };      // See-through garment shells (hidden until you click "See my fit")
+      };
+
+      // See-through garment shells (hidden until you click "See my fit")
       const shellMat = new THREE.MeshStandardMaterial({ color: 0x4a6fa5, transparent: true, opacity: 0.6 });
       const shells = {
         chest: addPart(new THREE.CylinderGeometry(0.47, 0.42, 0.7, 32), 0, 1.45, shellMat),
@@ -98,6 +100,7 @@
         hips: addPart(new THREE.CylinderGeometry(0.44, 0.47, 0.45, 32), 0, 0.5, shellMat)
       };
       for (const z in shells) { shells[z].visible = false; }
+
       const legs = [
         addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), -0.2, -0.35, plain),
         addPart(new THREE.CylinderGeometry(0.18, 0.14, 1.3, 32), 0.2, -0.35, plain)
@@ -183,7 +186,7 @@
         }
 
         document.getElementById("result").innerText = text.join(" | ");
-      }
+
         // Size each garment shell from the garment's measurements
         for (const z of zones) {
           if (g[z] === undefined) {
@@ -194,6 +197,7 @@
             shells[z].scale.set(s, 1, s);
           }
         }
+      }
 
       document.getElementById("fitButton").addEventListener("click", showResult);
     </script>
